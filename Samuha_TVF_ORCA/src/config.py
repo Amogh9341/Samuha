@@ -30,8 +30,8 @@ MINIMUM_DT = 0.01
 # =================================================================
 
 # Altitude management (meters)
-TAKEOFF_ALTITUDE = 2.0
-MAX_HEIGHT_M = 4.0
+TAKEOFF_ALTITUDE = 1.0
+MAX_HEIGHT_M = 3.0
 
 # Speed limits (m/s)
 MAX_SPEED_XY = 2.75
@@ -58,25 +58,25 @@ KF_VEL_D_DECAY = 0.92
 KF_VEL_D_UPDATE = 0.08
 
 # =================================================================
-# TELEMETRY IMPAIRMENT SIMULATION
+# TELEMETRY IMPAIRMENT SIMULATION (~30% RSSI equivalent)
 # =================================================================
 
-# Packet loss model
-DROP_RATE = 0.10
+# Random packet loss
+DROP_RATE = 0.2
 
-# Burst outages (simulating radio interference)
-BURST_START_PROB = 0.035
-BURST_MIN = 5
-BURST_MAX = 16
+# Burst outages / fading
+BURST_START_PROB = 0.10
+BURST_MIN = 10
+BURST_MAX = 35
 
-# Measurement noise (Gaussian, meters)
-NOISE_STD_XY = 0.22
-NOISE_STD_Z = 0.10
+# Position noise (meters)
+NOISE_STD_XY = 0.38
+NOISE_STD_Z  = 0.18
 
-# Transmission delay jitter
-DELAY_PROB = 0.10
-DELAY_MIN = 0.04
-DELAY_MAX = 0.28
+# Delay jitter
+DELAY_PROB = 0.28
+DELAY_MIN  = 0.08
+DELAY_MAX  = 0.75
 
 # =================================================================
 # COLLISION AVOIDANCE - TVF CORE

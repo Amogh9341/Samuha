@@ -27,9 +27,9 @@ async def main():
     - Drone 3: Port 14542, Goal [10, 0, -2]
     """
     drones = [
-        Drone(14540, [12, 2, -2]),
-        Drone(14541, [10, 4, -2]),
-        Drone(14542, [10, 0, -2]),
+        Drone(14540, [50, 25, -2]),
+        Drone(14541, [50, 18, -2]),
+        Drone(14542, [50, 15, -2]),
     ]
 
     await asyncio.gather(*(d.run() for d in drones))
