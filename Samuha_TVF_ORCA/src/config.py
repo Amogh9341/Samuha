@@ -89,8 +89,8 @@ GOAL_TOLERANCE = 0.75
 # Repulsion from obstacles
 REPULSION_GAIN = 2.1
 TANGENTIAL_GAIN = 1.18
-SAFE_RADIUS = 1.5
-INFLUENCE_RADIUS = 2.5
+SAFE_RADIUS = 1.2
+INFLUENCE_RADIUS = 2
 
 # =================================================================
 # COLLISION AVOIDANCE - FINE TUNING PARAMETERS

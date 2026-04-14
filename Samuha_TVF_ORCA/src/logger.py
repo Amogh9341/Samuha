@@ -86,7 +86,11 @@ class SwarmLogger:
     - events.csv: Discrete flight events
 
     Designed for async operation with periodic flushing.
+    Thread-safe with reference counting for multi-drone shutdown.
     """
+
+    # Class-level reference counter for shared logger
+    _active_drones = 0
 
     def __init__(self, log_dir: str = "logs", run_name: str = None):
         """
@@ -163,7 +167,7 @@ class SwarmLogger:
         Args:
             row: StateRow dataclass instance
         """
-        if self.states_writer is None:
+        if self.states_writer is None or self.states_handle.closed:
             return
 
         self.states_writer.writerow(asdict(row))
@@ -180,11 +184,27 @@ class SwarmLogger:
         Args:
             row: EventRow dataclass instance
         """
-        if self.events_writer is None:
+        if self.events_writer is None or self.events_handle.closed:
             return
 
         self.events_writer.writerow(asdict(row))
         self.events_handle.flush()
+
+    def register_drone(self):
+        """
+        Register a drone as using this logger.
+        Increments the active drone counter.
+        """
+        SwarmLogger._active_drones += 1
+
+    def unregister_drone(self):
+        """
+        Unregister a drone when it finishes.
+        Decrements the active drone counter and closes files when all drones are done.
+        """
+        SwarmLogger._active_drones -= 1
+        if SwarmLogger._active_drones <= 0:
+            self.close()
 
     def now(self) -> float:
         """
@@ -196,13 +216,16 @@ class SwarmLogger:
         return time.time()
 
     def close(self):
-        """Flush and close all file handles."""
-        if self.states_handle:
+        """
+        Flush and close all file handles.
+        Safe to call multiple times (idempotent).
+        """
+        if self.states_handle and not self.states_handle.closed:
             self.states_handle.flush()
             self.states_handle.close()
             self.states_handle = None
 
-        if self.events_handle:
+        if self.events_handle and not self.events_handle.closed:
             self.events_handle.flush()
             self.events_handle.close()
             self.events_handle = None

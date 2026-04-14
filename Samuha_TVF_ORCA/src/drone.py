@@ -65,7 +65,6 @@ class Drone:
 
         # Logger initialization (shared by all drones in swarm)
         self.logger = None
-        self.should_close_logger = False
 
     async def run(self):
         """
@@ -95,9 +94,9 @@ class Drone:
         if not hasattr(Drone, '_shared_logger'):
             run_name = f"swarm_run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             Drone._shared_logger = SwarmLogger(log_dir="logs", run_name=run_name)
-            self.should_close_logger = True  # First drone will close it
 
         self.logger = Drone._shared_logger
+        self.logger.register_drone()  # Register this drone with the logger
 
         tele_task = None
 
@@ -375,6 +374,6 @@ class Drone:
             if self.server_proc:
                 self.server_proc.terminate()
 
-            # Close logger (only drone that opened it should close)
-            if self.should_close_logger and self.logger:
-                self.logger.close()
+            # Unregister drone from logger (closes when all drones are done)
+            if self.logger:
+                self.logger.unregister_drone()
