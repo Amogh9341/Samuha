@@ -4,3 +4,7 @@ __pycache__/
 
 *.pdf
 *.csv
+*.docx
+create_code_summary.py
+create_irl_guide.py
+*.ipynb

@@ -34,63 +34,62 @@ TAKEOFF_ALTITUDE = 1.0
 MAX_HEIGHT_M = 3.0
 
 # Speed limits (m/s)
-MAX_SPEED_XY = 2.75
+MAX_SPEED_XY = 2.65
 MAX_SPEED_Z = 0.42
 
 # Acceleration limits (m/s²)
-MAX_ACCEL_XY = 2.2
+MAX_ACCEL_XY = 2.4
 MAX_ACCEL_Z = 0.45
 
 # =================================================================
-# TELEMETRY & STATE ESTIMATION
+# TELEMETRY & STATE ESTIMATION (STABILITY MAINTAINED)
 # =================================================================
 
 # Kalman filter confidence
-TELEMETRY_TIMEOUT = 2.8
+TELEMETRY_TIMEOUT = 1.2
 
-# Velocity estimate smoothing (low-pass filter coefficients)
-# North and East axes (moderately responsive)
-KF_VEL_NE_DECAY = 0.88
-KF_VEL_NE_UPDATE = 0.12
+# Velocity estimate smoothing
+KF_VEL_NE_DECAY = 0.94
+KF_VEL_NE_UPDATE = 0.06
 
-# Vertical axis (more conservative, smoother)
-KF_VEL_D_DECAY = 0.92
-KF_VEL_D_UPDATE = 0.08
+# Vertical axis
+KF_VEL_D_DECAY = 0.95
+KF_VEL_D_UPDATE = 0.05
 
 # =================================================================
-# TELEMETRY IMPAIRMENT SIMULATION (~30% RSSI equivalent)
+# TELEMETRY IMPAIRMENT SIMULATION (25% RSSI - POOR SIGNAL)
 # =================================================================
 
 # Random packet loss
-DROP_RATE = 0.2
+DROP_RATE = 0.1
 
 # Burst outages / fading
-BURST_START_PROB = 0.10
-BURST_MIN = 10
-BURST_MAX = 35
+BURST_START_PROB = 0.06
+BURST_MIN = 5
+BURST_MAX = 18
 
 # Position noise (meters)
-NOISE_STD_XY = 0.38
-NOISE_STD_Z  = 0.18
+NOISE_STD_XY = 0.2
+NOISE_STD_Z  = 0.1
 
 # Delay jitter
-DELAY_PROB = 0.28
-DELAY_MIN  = 0.08
-DELAY_MAX  = 0.75
+DELAY_PROB = 0.16
+DELAY_MIN  = 0.03
+DELAY_MAX  = 0.3
 
 # =================================================================
-# COLLISION AVOIDANCE - TVF CORE
+# COLLISION AVOIDANCE - TVF CORE (TUNED FOR PROXIMITY)
 # =================================================================
 
-# Attraction to goal
-GOAL_GAIN = 1.25
-GOAL_TOLERANCE = 0.75
+# Attraction to goal - Increased to pull drones together toward target
+GOAL_GAIN = 2.25
+GOAL_TOLERANCE = 0.5
 
-# Repulsion from obstacles
-REPULSION_GAIN = 2.1
-TANGENTIAL_GAIN = 1.18
-SAFE_RADIUS = 1.2
-INFLUENCE_RADIUS = 2
+# Repulsion from obstacles - Decreased to allow closer proximity
+REPULSION_GAIN = 1.35
+TANGENTIAL_GAIN = 0.85
+SAFE_RADIUS = 0.65
+INFLUENCE_RADIUS = 1.2
 
 # =================================================================
 # COLLISION AVOIDANCE - FINE TUNING PARAMETERS
@@ -98,7 +97,7 @@ INFLUENCE_RADIUS = 2
 
 # Numerical stability
 DIST_EPSILON = 1e-6
-MIN_DIST_CLAMP = 0.25
+MIN_DIST_CLAMP = 0.20
 
 # Vertical velocity handling
 VERT_VEL_SCALE = 0.45
@@ -106,20 +105,20 @@ VERT_REPULSION_GAIN = 0.12
 
 # Field influence dynamics
 INFLUENCE_POWER = 3
-SAFE_RADIUS_SCALE = 1.4
-TANGENT_SCALE_DIV = 2.0
+SAFE_RADIUS_SCALE = 1.2
+TANGENT_SCALE_DIV = 2.5
 
-# Emergency reciprocal avoidance (ORCA-like layer)
-EMERGENCY_PUSH_MULT = 2.8
-TANGENTIAL_PASS_MULT = 1.1
-URGENCY_AGGRESSION_REDUCE = 0.35
+# Emergency reciprocal avoidance
+EMERGENCY_PUSH_MULT = 2.1
+TANGENTIAL_PASS_MULT = 1.0
+URGENCY_AGGRESSION_REDUCE = 0.25
 
 # =================================================================
 # NAVIGATION & CONTROL FILTERING
 # =================================================================
 
-# Velocity command filtering (low-pass smoothness)
-VEL_ALPHA = 0.32
+# Velocity command filtering
+VEL_ALPHA = 0.45
 
 # Command deadband (m/s - prevents jitter)
 CMD_DEADBAND = 0.015
