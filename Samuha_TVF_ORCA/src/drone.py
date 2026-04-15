@@ -75,13 +75,9 @@ class Drone:
         
         Sequence:
         1. Start MAVSDK server
-        2. Connect to autopilot
-        3. Arm and takeoff
-        4. Enter offboard mode with collision avoidance
-        5. Navigate to goal
-        6. Land
+        2. Execute main control loop
         """
-
+        # Start MAVSDK server (SITL: UDP, HITL: overridden)
         self.server_proc = subprocess.Popen(
             [
                 MAVSDK_SERVER_BIN,
@@ -92,6 +88,24 @@ class Drone:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
+
+        # Run the main control loop
+        await self._run_main_loop()
+
+    async def _run_main_loop(self):
+        """
+        Main control loop shared by SITL and HITL.
+        
+        Contains:
+        1. Connect to autopilot
+        2. Telemetry loop with noise simulation (SITL only)
+        3. Arm and takeoff
+        4. Offboard mode with collision avoidance
+        5. Navigate to goal
+        6. Land and cleanup
+        
+        Both Drone (SITL) and HITLDrone call this after server setup.
+        """
 
         # Initialize logger (only first drone creates it; others check)
         if not hasattr(Drone, '_shared_logger'):
