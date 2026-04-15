@@ -40,17 +40,20 @@ class Drone:
     - Acceleration limiting and velocity filtering
     """
 
-    def __init__(self, port, target_ned):
+    def __init__(self, port, target_ned, sitl=True):
         """
         Initialize drone with telemetry port and target.
 
         Args:
             port (int): Telemetry port (e.g., 14540)
             target_ned (list): Target position [N, E, D] in meters
+            sitl (bool): Enable SITL mode with simulated noise/impairments (default: True)
+                        Set to False for Hardware-In-The-Loop (HITL) with real sensors
         """
         self.port = port
         self.target = target_ned
         self.sdk_port = port + SDK_PORT_OFFSET
+        self.SITL = sitl  # Enable/disable simulated telemetry impairments
 
         self.drone = System(
             mavsdk_server_address="localhost", port=self.sdk_port
@@ -115,36 +118,39 @@ class Drone:
             # TELEMETRY LOOP WITH NOISE SIMULATION
             # ---------------------------------------------------
             async def telemetry_loop():
-                """Receive telemetry with simulated impairments."""
+                """Receive telemetry with simulated impairments (SITL only)."""
                 async for pos in self.drone.telemetry.position_velocity_ned():
-                    # Packet loss
-                    if random.random() < DROP_RATE:
-                        continue
+                    # === SITL MODE: Apply Simulated Impairments ===
+                    if self.SITL:
+                        # Packet loss
+                        if random.random() < DROP_RATE:
+                            continue
 
-                    # Burst outage (e.g., radio interference)
-                    if self.burst > 0:
-                        self.burst -= 1
-                        continue
+                        # Burst outage (e.g., radio interference)
+                        if self.burst > 0:
+                            self.burst -= 1
+                            continue
 
-                    if random.random() < BURST_START_PROB:
-                        self.burst = random.randint(BURST_MIN, BURST_MAX)
-                        continue
+                        if random.random() < BURST_START_PROB:
+                            self.burst = random.randint(BURST_MIN, BURST_MAX)
+                            continue
 
-                    # Delay jitter
-                    if random.random() < DELAY_PROB:
-                        await asyncio.sleep(
-                            random.uniform(DELAY_MIN, DELAY_MAX)
-                        )
+                        # Delay jitter
+                        if random.random() < DELAY_PROB:
+                            await asyncio.sleep(
+                                random.uniform(DELAY_MIN, DELAY_MAX)
+                            )
 
-                    # Raw truth from SITL
+                    # Raw truth from SITL / actual sensor reading from HITL
                     n = pos.position.north_m
                     e = pos.position.east_m
                     d = pos.position.down_m
 
-                    # Add Gaussian sensor noise
-                    n += random.gauss(0.0, NOISE_STD_XY)
-                    e += random.gauss(0.0, NOISE_STD_XY)
-                    d += random.gauss(0.0, NOISE_STD_Z)
+                    # Add Gaussian sensor noise only in SITL mode
+                    if self.SITL:
+                        n += random.gauss(0.0, NOISE_STD_XY)
+                        e += random.gauss(0.0, NOISE_STD_XY)
+                        d += random.gauss(0.0, NOISE_STD_Z)
 
                     raw = [n, e, d]
 
