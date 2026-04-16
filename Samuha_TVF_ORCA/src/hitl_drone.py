@@ -86,9 +86,9 @@ class HITLDrone:
     - Minimal configuration - just connection string and drone ID
     """
 
-    def __init__(self, connection_string, drone_id, target_ned):
+    def __init__(self, connection_string, drone_id, target_lat, target_lon, target_alt_m):
         """
-        Initialize HITL drone with minimal configuration.
+        Initialize HITL drone with GPS target coordinates.
         
         Args:
             connection_string (str): Serial connection string
@@ -103,9 +103,9 @@ class HITLDrone:
             drone_id (int): Drone identifier (1, 2, 3, etc.)
                 Used for logging and internal identification
             
-            target_ned (list): Target position [N, E, D] in meters
-                Required - must be provided for each drone
-                Examples: [10, 2, -2], [15.5, 8.3, -2.5], etc.
+            target_lat (float): Target latitude in degrees
+            target_lon (float): Target longitude in degrees
+            target_alt_m (float): Target altitude in meters (absolute, MSL)
         """
         # Parse connection string to extract port and baud rate
         self.port_path, self.baud_rate = HITLConfig.parse_connection_string(
@@ -114,22 +114,22 @@ class HITLDrone:
         self.drone_id = drone_id
         self.connection_string = f"serial://{self.port_path}:{self.baud_rate}"
         
-        # Validate target position
-        if not isinstance(target_ned, (list, tuple)) or len(target_ned) != 3:
-            raise ValueError(
-                f"target_ned must be a list/tuple of 3 values [N, E, D], "
-                f"got {target_ned}"
-            )
+        # Store GPS target for later conversion
+        self.target_lat = target_lat
+        self.target_lon = target_lon
+        self.target_alt_m = target_alt_m
+        
+        # Target NED will be set after connecting to drone
+        # (needs drone's home position for conversion)
+        self.target = None
         
         # Setup logging
         self.logger_obj = logging.getLogger(__name__)
         self.logger_obj.info(
             f"HITL Drone {drone_id} initialized: "
-            f"{self.port_path} @ {self.baud_rate} baud -> Target: {target_ned}"
+            f"{self.port_path} @ {self.baud_rate} baud -> "
+            f"Target GPS: ({target_lat}, {target_lon}, {target_alt_m}m)"
         )
-        
-        # Store target for HITL operations
-        self.target = target_ned
         
         # Initialize Kalman filter for state estimation
         self.kf = AsyncKalmanNED()
@@ -141,6 +141,63 @@ class HITLDrone:
         
         # Logger (shared by all HITL drones in swarm)
         self.logger = None
+
+    async def _gps_to_ned(self, system):
+        """
+        Convert target GPS coordinates to NED relative to drone's home position.
+        
+        Uses MAVSDK's telemetry.home() to get the PX4-set home position,
+        then converts target GPS to NED coordinates.
+        
+        Args:
+            system: MAVSDK System object (connected to drone)
+        
+        Returns:
+            list: [north_m, east_m, down_m] in NED format
+        
+        Raises:
+            ValueError: If home position is not available
+        """
+        EARTH_RADIUS_M = 6371000.0
+        
+        # Get home position from drone (set by PX4 on first GPS lock)
+        home_pos = None
+        async for home in system.telemetry.home():
+            home_pos = home
+            break  # Only need the first reading
+        
+        if home_pos is None:
+            raise ValueError(
+                "Could not retrieve home position from drone. "
+                "Ensure GPS lock achieved and PX4 has set home position."
+            )
+        
+        home_lat = home_pos.latitude_deg
+        home_lon = home_pos.longitude_deg
+        home_alt_m = home_pos.absolute_altitude_m
+        
+        # Calculate differences
+        lat_diff = self.target_lat - home_lat
+        lon_diff = self.target_lon - home_lon
+        alt_diff = home_alt_m - self.target_alt_m  # Positive = down
+        
+        # Convert to radians
+        lat_diff_rad = math.radians(lat_diff)
+        lon_diff_rad = math.radians(lon_diff)
+        home_lat_rad = math.radians(home_lat)
+        
+        # Calculate NED in meters
+        # North: latitude change * Earth radius
+        north_m = lat_diff_rad * EARTH_RADIUS_M
+        
+        # East: longitude change * Earth radius * cos(latitude)
+        # (cosine accounts for convergence of meridians at higher latitudes)
+        east_m = lon_diff_rad * EARTH_RADIUS_M * math.cos(home_lat_rad)
+        
+        # Down: positive downward (altitude decrease)
+        down_m = alt_diff
+        
+        return [north_m, east_m, down_m]
 
     async def run(self):
         """
@@ -181,6 +238,12 @@ class HITLDrone:
                 event_type="connection",
                 message="Connected to MAVSDK"
             ))
+            
+            # ======= CONVERT GPS TO NED =======
+            self.target = await self._gps_to_ned(system)
+            self.logger_obj.info(
+                f"HITL Drone {self.drone_id}: GPS target converted to NED {self.target}"
+            )
             
             # ======= TELEMETRY LOOP (NO SIMULATION - REAL DATA ONLY) =======
             async def telemetry_loop():
