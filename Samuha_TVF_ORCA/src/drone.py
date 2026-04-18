@@ -22,7 +22,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 
-from geometry_msgs.msg import PoseStamped
+import PoseStamped
 
 from .config import *
 from .kalman import AsyncKalmanNED
