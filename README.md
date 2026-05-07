@@ -168,10 +168,9 @@ python3 MAVSDK_path_find.py
 5. Build PX4 SITL if not already available. From a PX4 source tree:
 
 ```bash
-git clone https://github.com/PX4/Firmware.git
-cd Firmware
-git checkout v1.16.0
-make px4_sitl_default sitl_gazebo-classic
+git clone https://github.com/PX4/PX4-Autopilot.git
+cd PX4-Autopilot
+make px4_sitl_gazebo-classic
 ```
 
 6. Place `sitl_multiple_ros_run.sh` under `Tools/simulation/gazebo-classic/` if it is not already there, then run the multi-drone Gazebo Classic launcher:
