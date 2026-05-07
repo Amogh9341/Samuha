@@ -117,15 +117,6 @@ Samuha/
 - Add dynamic priority or role assignment to avoid mutual oscillation.
 - Seamlessly merge with a PX4 ROS-native interface once that library becomes stable.
 
-## Research references
-
-The repository is inspired by reactive swarm control and reciprocal collision avoidance research. Some representative references include:
-
-- Jur van den Berg, Stephen J. Guy, Ming Lin, and Dinesh Manocha, "Reciprocal n-body collision avoidance," *Robotics: Science and Systems*, 2011.
-- Jur van den Berg, Stephen J. Guy, Ming Lin, and Dinesh Manocha, "Optimal reciprocal collision avoidance for multiple mobile robots," *IEEE International Conference on Robotics and Automation (ICRA)*, 2011.
-- Fabio Amigoni and Riccardo Rege, "Vector field-based motion planning for mobile robots," *International Journal of Robotics Research*, 2004. (Representative of vector field guidance methods.)
-- Olafur K. Olson, "Tangent field and potential field approaches for multi-agent motion planning," *Journal of Intelligent & Robotic Systems*, 2020. (Representative of tangential vector field methods.)
-
 ## Simulation and testing workflow
 
 This repo is designed for simulation-first validation before IRL testing.
