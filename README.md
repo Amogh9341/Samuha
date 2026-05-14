@@ -208,7 +208,3 @@ Potential next steps include:
 - integrating global path planning,
 - adding explicit velocity prediction or MPC,
 - extending the emergency safety layer for tighter swarm corridors.
-
----
-
-If you want, I can also add a second README section with exact command examples for a full multi-drone test case.
